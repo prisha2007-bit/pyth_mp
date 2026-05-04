@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LifeStream | Blood Exchange</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --teal: #0d9488; --teal-dark: #0f766e; --teal-light: #f0fdfa; --text: #1e293b; }
+        body { font-family: 'Inter', sans-serif; margin: 0; background: #fff; color: var(--text); }
+        nav { display: flex; justify-content: space-between; padding: 1rem 5%; border-bottom: 1px solid #e2e8f0; align-items: center; }
+        .logo { font-weight: 600; color: var(--teal); font-size: 1.5rem; }
+        .container { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
+        .card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        input, select { width: 100%; padding: 0.8rem; margin: 0.5rem 0 1.5rem 0; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; }
+        .btn { background: var(--teal); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 600; transition: 0.2s; }
+        .btn:hover { background: var(--teal-dark); }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
+        .badge-urgent { background: var(--teal-light); color: var(--teal); border: 1px solid var(--teal); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo">LifeStream</div>
+        <div id="nav-links"></div>
+    </nav>
+
+    <div class="container">
+        <!-- Auth Section -->
+        <div id="auth-section" class="card">
+            <h2 id="auth-title">Hospital Login</h2>
+            <input type="email" id="email" placeholder="Email Address">
+            <input type="password" id="password" placeholder="Password">
+            <button class="btn" onclick="handleAuth()">Login</button>
+            <p style="text-align:center; cursor:pointer; color:var(--teal)" onclick="toggleAuth()">Need to register your hospital?</p>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div id="dashboard" class="hidden">
+            <div style="display:flex; justify-content: space-between; align-items:center">
+                <h2>Inventory Management</h2>
+                <button class="btn" style="width:auto" onclick="showAddModal()">+ Add Blood Unit</button>
+            </div>
+            <div id="inventory-list" class="grid"></div>
+            
+            <hr style="margin: 3rem 0; border: 0; border-top: 1px solid #eee;">
+            
+            <h2>Find Blood Nearby</h2>
+            <div style="display:flex; gap:1rem">
+                <select id="search-type">
+                    <option value="A+">A+</option><option value="O+">O+</option><option value="AB+">AB+</option>
+                </select>
+                <button class="btn" style="width:auto" onclick="searchBlood()">Search</button>
+            </div>
+            <div id="search-results" class="grid" style="margin-top:1rem"></div>
+        </div>
+    </div>
+
+    <script>
+        // JS logic for switching views and API calls goes here (simulated below)
+        let isLogin = true;
+        function toggleAuth() {
+            isLogin = !isLogin;
+            document.getElementById('auth-title').innerText = isLogin ? 'Hospital Login' : 'Register Hospital';
+        }
+
+        async function handleAuth() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+            
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({email, password, name: "City General", phone: "555-0199", address: "123 Health St", lat: 40.7, lon: -74})
+            });
+            const data = await res.json();
+            if(data.success) {
+                document.getElementById('auth-section').classList.add('hidden');
+                document.getElementById('dashboard').classList.remove('hidden');
+                loadInventory();
+            }
+        }
+
+        async function loadInventory() {
+            const res = await fetch('/api/inventory');
+            const items = await res.json();
+            const list = document.getElementById('inventory-list');
+            list.innerHTML = items.map(i => `
+                <div class="card">
+                    <h3>${i.type} <span class="${i.urgent ? 'badge-urgent' : 'hidden'}">Expiring Soon</span></h3>
+                    <p>Quantity: ${i.qty} units</p>
+                    <p>Expiry: ${i.expiry}</p>
+                </div>
+            `).join('');
+        }
+    </script>
+</body>
+</html>
